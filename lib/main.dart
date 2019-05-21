@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:todolist1/todo_list/todo_class.dart';
+
 import 'package:sqflite/sqflite.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:todolist1/todo_list/todo_class.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -76,14 +78,13 @@ class MyPageState extends State<MyPage> {
   void appBar_IconButton_action() {
     setState(() {
       var len = items.length;
-      for(int i=0; i < len; i++){
-        print(i);
-        if(items[0].todo_icon == Icons.check_box){
-          items.removeAt(0);
-        }
+      var num =0;
+      for(int i=0; i<len;i++){
+        if (items[num].todo_icon == Icons.check_box) {
+          items.removeAt(num);
+        }else{num++;}
       }
     });
-
   }
 }
 
