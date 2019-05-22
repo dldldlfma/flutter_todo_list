@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todolist1/todo_list/todo_class.dart';
+import 'package:todolist1/todo_list/bottom_sheet.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'dart:io';
@@ -42,6 +43,8 @@ class MyPageState extends State<MyPage> {
   }
 
   Widget build(BuildContext context) {
+    bottom_sheet modal = bottom_sheet(items);
+
     return Scaffold(
         appBar: AppBar(
           title: Text('ToDo List'),
@@ -51,27 +54,26 @@ class MyPageState extends State<MyPage> {
             IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () {
+                  //Delete check value
                   appBar_IconButton_action();
                 }),
           ],
         ),
-        body: Center(
-          child: Todo_list_body(items),
-        ),
-      floatingActionButton:FloatingActionButton(
-        child:Icon(
-          Icons.add,
-        ),
+        body: Todo_list_body(items),
+        floatingActionButton:FloatingActionButton(
+            child:Icon(
+              Icons.add,
+            ),
         backgroundColor: Colors.red,
+
         onPressed: () {
-          print("FAB push");
           setState(() {
-            items.add(todo_item(Icons.check_box_outline_blank, "Hello Add","Add by FAB"));
+            modal.mainBottomSheet(context);
+            setState((){print("FAB push");});
           });
 
         }
-      )
-      ,
+      ),
     );
   }
 
@@ -86,6 +88,7 @@ class MyPageState extends State<MyPage> {
       }
     });
   }
+
 }
 
 class Todo_list_body extends StatefulWidget {
@@ -102,15 +105,13 @@ class Todo_body extends State<Todo_list_body> {
     this.item = items;
   }
 
-
   Widget build(BuildContext context) {
     return ListView.builder(
         itemCount: item.length,
         itemBuilder: (context, index) {
           return ListTile(
-            //leading : Add image icon
             leading: Icon(item[index].todo_icon),
-            title: Text('${item[index]}'),
+            title: Text(item[index].todo_title),
             subtitle: Text(item[index].todo_sub),
             onTap: () {
               setState(() {
@@ -128,4 +129,16 @@ class Todo_body extends State<Todo_list_body> {
 }
 
 
+class botsheet extends StatefulWidget {
+  @override
+  _botsheetState createState() => _botsheetState();
+}
 
+class _botsheetState extends State<botsheet> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child:Text("Hello"),
+    );
+  }
+}
