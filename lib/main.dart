@@ -15,7 +15,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   @override
-  List<todo_item> items = [todo_item(Icons.check_box, "Hello", "Hi"),];
+  List<todo_item> items = [todo_item(Icons.check_box, "Push the red button", "Add your Todo content"),];
 
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -60,8 +60,7 @@ class MyPageState extends State<MyPage> {
         body: Center(
           child: Column(
             children: <Widget>[
-              Container(
-                height:440,
+              Expanded(
                 child:Todo_list_body(items),
               ),
             ]
@@ -72,7 +71,6 @@ class MyPageState extends State<MyPage> {
               Icons.add,
             ),
         backgroundColor: Colors.red,
-
         onPressed: () => _onFABbutton(),
       ),
     );
@@ -91,12 +89,13 @@ class MyPageState extends State<MyPage> {
   }
 
   void _onFABbutton() {
-
     TextEditingController text_controller = TextEditingController();
-
     showModalBottomSheet(context: context, builder: (context) {
       return Column(
           children: <Widget>[
+            Text("Make Todo list",
+
+              ),
             TextFormField(
               controller: text_controller,
               decoration: InputDecoration(
