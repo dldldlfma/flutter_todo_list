@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:todolist1/todo_list/todo_class.dart';
-import 'package:todolist1/todo_list/bottom_sheet.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'dart:io';
@@ -8,6 +7,7 @@ import 'dart:async';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(MyApp());
@@ -43,8 +43,6 @@ class MyPageState extends State<MyPage> {
   }
 
   Widget build(BuildContext context) {
-    bottom_sheet modal = bottom_sheet(items);
-
     return Scaffold(
         appBar: AppBar(
           title: Text('ToDo List'),
@@ -59,20 +57,23 @@ class MyPageState extends State<MyPage> {
                 }),
           ],
         ),
-        body: Todo_list_body(items),
+        body: Center(
+          child: Column(
+            children: <Widget>[
+              Container(
+                height:440,
+                child:Todo_list_body(items),
+              ),
+            ]
+          )
+        ),
         floatingActionButton:FloatingActionButton(
             child:Icon(
               Icons.add,
             ),
         backgroundColor: Colors.red,
 
-        onPressed: () {
-          setState(() {
-            modal.mainBottomSheet(context);
-            setState((){print("FAB push");});
-          });
-
-        }
+        onPressed: () => _onFABbutton(),
       ),
     );
   }
@@ -89,6 +90,34 @@ class MyPageState extends State<MyPage> {
     });
   }
 
+  void _onFABbutton() {
+
+    TextEditingController text_controller = TextEditingController();
+
+    showModalBottomSheet(context: context, builder: (context) {
+      return Column(
+          children: <Widget>[
+            TextFormField(
+              controller: text_controller,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'what are you have to do?\n\n'),
+              maxLines: 3,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (text) => _onFieldSubmitted(text_controller),
+            )
+            ]);
+    });
+  }
+
+  void _onFieldSubmitted(var text_controller){
+    Navigator.pop(context);
+    setState(() {String now = DateFormat('yyyy-MM-dd - kk:mm').format(DateTime.now());
+    items.add(todo_item(
+        Icons.check_box_outline_blank, text_controller.text, now));}
+        );
+  }
 }
 
 class Todo_list_body extends StatefulWidget {
@@ -107,6 +136,7 @@ class Todo_body extends State<Todo_list_body> {
 
   Widget build(BuildContext context) {
     return ListView.builder(
+        scrollDirection: Axis.vertical,
         itemCount: item.length,
         itemBuilder: (context, index) {
           return ListTile(
@@ -125,20 +155,5 @@ class Todo_body extends State<Todo_list_body> {
             onLongPress: () {},
           );
         });
-  }
-}
-
-
-class botsheet extends StatefulWidget {
-  @override
-  _botsheetState createState() => _botsheetState();
-}
-
-class _botsheetState extends State<botsheet> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child:Text("Hello"),
-    );
   }
 }
