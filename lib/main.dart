@@ -4,12 +4,25 @@ import 'package:todolist1/todo_list/todo_class.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:io';
 import 'dart:async';
-import 'package:path/path.dart' as p;
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:intl/intl.dart';
 
-void main() {
+void main() async{
+
+  final database = openDatabase(
+      join(await getDatabasesPath(), 'todo_list.db'),
+      onCreate: (db, version) {
+        return db.execute(
+        "CREATE TABLE todos(id INTEGER PRIMARY KEY, todo TEXT, time TEXT, complete INTEGER)",
+        );
+      },
+      version: 1,
+  );
+
+  DB db = DB(database);
+
   runApp(MyApp());
 }
 
@@ -71,7 +84,7 @@ class MyPageState extends State<MyPage> {
               Icons.add,
             ),
         backgroundColor: Colors.red,
-        onPressed: () => _onFABbutton(),
+        onPressed: () => _onFABbutton(context),
       ),
     );
   }
@@ -88,7 +101,7 @@ class MyPageState extends State<MyPage> {
     });
   }
 
-  void _onFABbutton() {
+  void _onFABbutton(context) {
     TextEditingController text_controller = TextEditingController();
     showModalBottomSheet(context: context, builder: (context) {
       return Column(
@@ -104,13 +117,13 @@ class MyPageState extends State<MyPage> {
               maxLines: 3,
               autofocus: true,
               textInputAction: TextInputAction.done,
-              onFieldSubmitted: (text) => _onFieldSubmitted(text_controller),
+              onFieldSubmitted: (text) => _onFieldSubmitted(text_controller, context),
             )
             ]);
     });
   }
 
-  void _onFieldSubmitted(var text_controller){
+  void _onFieldSubmitted(var text_controller, var context){
     Navigator.pop(context);
     setState(() {String now = DateFormat('yyyy-MM-dd - kk:mm').format(DateTime.now());
     items.add(todo_item(
@@ -155,4 +168,81 @@ class Todo_body extends State<Todo_list_body> {
           );
         });
   }
+}
+
+
+
+
+class Todo {
+  final int id;
+  final String todo;
+  final String time;
+  final int complete;
+
+  Todo({this.id, this.todo, this.time, this.complete});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'todo': todo,
+      'time': time,
+      'complete': complete,
+    };
+  }
+}
+
+
+
+
+
+class DB {
+  Future<Database> db;
+
+  DB(Future<Database> db) {
+    this.db = db;
+  }
+
+  Future<void> insertTodo(Todo todo) async {
+    final Database db = await this.db;
+    await db.insert(
+      'todos', //DB table 이름
+      todo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Todo>> todos() async {
+    final Database db = await this.db;
+
+    final List<Map<String, dynamic>> maps = await db.query('todos');
+    return List.generate(maps.length, (i) {
+      return Todo(
+          id: maps[i]['id'],
+          todo: maps[i]['todo'],
+          time: maps[i]['time'],
+          complete: maps[i]['complete']
+      );
+    });
+  }
+
+  Future<void> updateTodo(Todo todo) async {
+    final db = await this.db;
+
+    await db.update(
+      'todos', //DB table 이름
+      todo.toMap(), // 업데이트할 값
+      where: "id=?",
+      whereArgs: [todo.id],
+    );
+  }
+
+  Future<void> deleteTodo(int id) async {
+    final db = await this.db;
+    await db.delete(
+      'todos',
+      where: "id=?",
+      whereArgs: [id],
+    );
+  }
+
 }
