@@ -1,4 +1,4 @@
-#Sat May 25 20:29:22 KST 2019
-base.0=C\:\\Users\\dldld\\AndroidStudioProjects\\todo_list\\build\\app\\intermediates\\transforms\\dexMerger\\debug\\0
+#Sun May 26 06:25:41 KST 2019
+base.0=C\:\\Users\\ksg\\AndroidStudioProjects\\todolist1\\build\\app\\intermediates\\transforms\\dexMerger\\debug\\0
 path.0=classes.dex
 renamed.0=classes.dex

@@ -15,3 +15,23 @@ class todo_item {
     init_value(icon, title, sub);
   }
 }
+
+/*
+class Todo {
+  final int id;
+  final String todo;
+  final String time;
+  final int complete;
+
+  Todo({this.id, this.todo, this.time, this.complete});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'todo': todo,
+      'time': time,
+      'complete': complete,
+    };
+  }
+}
+*/

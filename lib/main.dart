@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:todolist1/todo_list/todo_class.dart';
 
 import 'package:sqflite/sqflite.dart';
-import 'dart:io';
+
 import 'dart:async';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-
 import 'package:intl/intl.dart';
 
 void main() async{
@@ -21,20 +19,29 @@ void main() async{
       version: 1,
   );
 
+  List<todo_item> items = [];
   DB db = DB(database);
+  await db.load_todo_val(items);
 
-  runApp(MyApp());
+  runApp(MyApp(items, db));
 }
 
 class MyApp extends StatelessWidget {
   @override
-  List<todo_item> items = [todo_item(Icons.check_box, "Push the red button", "Add your Todo content"),];
+  DB db;
+  List<todo_item> items;
+
+
+  MyApp(var items, var db){
+    this.items=items;
+    this.db = db;
+  }
 
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'ToDo List',
       color: Colors.red,
-      home: MyPage(items),
+      home: MyPage(items, db),
     );
   }
 }
@@ -42,17 +49,21 @@ class MyApp extends StatelessWidget {
 class MyPage extends StatefulWidget {
   @override
   List<todo_item> items;
-  MyPage(var items){
+  DB db;
+  MyPage(var items, var db){
     this.items = items;
+    this.db = db;
   }
-  MyPageState createState() => new MyPageState(items);
+  MyPageState createState() => new MyPageState(items, db);
 }
 
 class MyPageState extends State<MyPage> {
 
   List<todo_item> items;
-  MyPageState(var items){
+  DB db;
+  MyPageState(var items, var db){
     this.items = items;
+    this.db = db;
   }
 
   Widget build(BuildContext context) {
@@ -67,6 +78,7 @@ class MyPageState extends State<MyPage> {
                 onPressed: () {
                   //Delete check value
                   appBar_IconButton_action();
+                  db.deleteTodoComp(1);
                 }),
           ],
         ),
@@ -74,7 +86,7 @@ class MyPageState extends State<MyPage> {
           child: Column(
             children: <Widget>[
               Expanded(
-                child:Todo_list_body(items),
+                child:Todo_list_body(items, db),
               ),
             ]
           )
@@ -107,7 +119,6 @@ class MyPageState extends State<MyPage> {
       return Column(
           children: <Widget>[
             Text("Make Todo list",
-
               ),
             TextFormField(
               controller: text_controller,
@@ -123,44 +134,65 @@ class MyPageState extends State<MyPage> {
     });
   }
 
-  void _onFieldSubmitted(var text_controller, var context){
+  void _onFieldSubmitted (var text_controller, var context) async{
     Navigator.pop(context);
-    setState(() {String now = DateFormat('yyyy-MM-dd - kk:mm').format(DateTime.now());
-    items.add(todo_item(
-        Icons.check_box_outline_blank, text_controller.text, now));}
-        );
+    String now = DateFormat('yyyy-MM-dd - kk:mm').format(DateTime.now());
+    String todo_val = text_controller.text;
+    setState(() {
+      items.add(todo_item(
+          Icons.check_box_outline_blank, todo_val, now));
+    }
+    );
+    var num = items.length;
+    Todo value = Todo(id:num, todo:todo_val, time:now, complete: 0);
+    await db.insertTodo(value);
+
+    print(await db.todos());
+
+
   }
 }
 
 class Todo_list_body extends StatefulWidget {
   List<todo_item> items;
-  Todo_list_body(var items){
+  DB db;
+  Todo_list_body(var items, var db){
     this.items = items;
+    this.db = db;
   }
-  Todo_body createState() => Todo_body(items);
+  Todo_body createState() => Todo_body(items, db);
 }
 
 class Todo_body extends State<Todo_list_body> {
-  List<todo_item> item = [];
-  Todo_body(var items) {
-    this.item = items;
+  List<todo_item> items = [];
+  DB db;
+  
+  Todo_body(var items, var db) {
+    this.items = items;
+    this.db = db;
+  }
+  
+  void complete_toggle(var index, var val) async {
+    this.db.updateTodo_Comp(index, val);
   }
 
   Widget build(BuildContext context) {
     return ListView.builder(
         scrollDirection: Axis.vertical,
-        itemCount: item.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
           return ListTile(
-            leading: Icon(item[index].todo_icon),
-            title: Text(item[index].todo_title),
-            subtitle: Text(item[index].todo_sub),
+            leading: Icon(items[index].todo_icon),
+            title: Text(items[index].todo_title),
+            subtitle: Text(items[index].todo_sub),
             onTap: () {
               setState(() {
-                if (item[index].todo_icon == Icons.check_box_outline_blank) {
-                  item[index].todo_icon = Icons.check_box;
+                if (items[index].todo_icon == Icons.check_box_outline_blank) {
+                  items[index].todo_icon = Icons.check_box;
+                  complete_toggle(items[index].todo_title, 1);
                 } else {
-                  item[index].todo_icon = Icons.check_box_outline_blank;
+                  items[index].todo_icon = Icons.check_box_outline_blank;
+                  complete_toggle(items[index].todo_title, 0);
                 }
               });
             },
@@ -192,14 +224,24 @@ class Todo {
 }
 
 
-
-
-
 class DB {
   Future<Database> db;
 
   DB(Future<Database> db) {
     this.db = db;
+  }
+
+  Future<void> load_todo_val(List<todo_item> todo_list) async {
+    List<Todo> val = await todos();
+    var icon;
+    for(var value in val){
+      if(value.complete == 1){
+        icon=Icons.check_box;
+      }else{
+        icon=Icons.check_box_outline_blank;
+      }
+      todo_list.add(todo_item(icon, value.todo, value.time));
+    }
   }
 
   Future<void> insertTodo(Todo todo) async {
@@ -236,7 +278,18 @@ class DB {
     );
   }
 
-  Future<void> deleteTodo(int id) async {
+  Future<void> updateTodo_Comp(String todo_val, int comp) async {
+    final db = await this.db;
+
+    await db.update(
+      'todos', //DB table 이름
+      {'complete':comp}, // 업데이트할 값
+      where: "todo=?",
+      whereArgs: [todo_val],
+    );
+  }
+
+  Future<void> deleteTodoid(int id) async {
     final db = await this.db;
     await db.delete(
       'todos',
@@ -244,5 +297,15 @@ class DB {
       whereArgs: [id],
     );
   }
+
+  Future<void> deleteTodoComp(int comp) async {
+    final db = await this.db;
+    await db.delete(
+      'todos',
+      where: "complete=?",
+      whereArgs: [comp],
+    );
+  }
+
 
 }
